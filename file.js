@@ -1,0 +1,52 @@
+const http = require('http');
+const fs=require('fs')
+
+const server = http.createServer((req, res) => {
+res.setHeader('content-type','text/html')
+if (req.url === '/') {
+        res.end(`
+            <form action="/message" method="POST">
+                <label>Name:</label>
+                <input type="text" name="uname">
+                <button>add</button>
+            </form>
+        `);
+    } else if (req.url === '/message' && req.method === 'POST') {
+        let allchuncks=[]
+        req.on("data",(chunks)=>{
+            allchuncks.push(chunks)
+            
+        })
+        req.on("end",()=>{
+            let combinedbuffers=Buffer.concat(allchuncks)
+
+            let value=combinedbuffers.toString().split("=")[1]
+            fs.writeFile("form.txt",value,(err)=>{
+                res.statusCode=302
+                res.setHeader('Location','/')
+                res.end()
+            })
+          
+
+        })
+    }
+    else if(req.url==="/read"){
+        fs.readFile("form.txt",(err,data)=>{
+            res.end(`<h1>${data.toString()}</h1>`)
+        })
+
+
+    }
+    else {
+        res.end("pagenot found");
+    }
+
+
+});
+
+
+const port = 3000;
+
+server.listen(port, () => {
+    console.log("server is running");
+});
